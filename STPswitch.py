@@ -16,25 +16,40 @@ class STPswitch(Switch):
     def __init__(self, addr, heartbeatTime):
         Switch.__init__(self, addr, heartbeatTime)  # initialize superclass - don't remove
         """TODO: add your own class fields and initialization code here"""
+        self.forwardingTable = {}
 
     def handlePacket(self, port, packet):
         """TODO: process incoming packet"""
         # default implementation sends packet back out the port it arrived
+        """if packet.isData():
+            if packet.dstAddr != "X":
+                pass
+            else:
+                print("Broadcast packet recvd on port {} on switch {}".format(port, self.addr))
+                for p in self.links.keys():
+                    if p != port:
+                        print("Broadcast packet sent on port {}".format(p))
+                        self.send(p, packet)"""
         self.send(port, packet)
-
 
     def handleNewLink(self, port, endpoint, cost):
         """TODO: handle new link"""
         pass
 
-
     def handleRemoveLink(self, port, endpoint):
         """TODO: handle removed link"""
         pass
 
-
     def handlePeriodicOps(self, currTimeInMillisecs):
         """TODO: handle periodic operations. This method is called every heartbeatTime.
         You can change the value of heartbeatTime in the json file."""
+        '''
+        TREE GOES HERE!!!
+                                  ^
+                                /   \
+                               /     \
+                              /_______\
+                                |___|
+                            
+        '''
         pass
-

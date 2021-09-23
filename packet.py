@@ -4,6 +4,7 @@
 
 from copy import deepcopy
 
+
 class Packet:
     """Packet class defines packets that clients and switches
        send in the simulated network"""
@@ -15,12 +16,11 @@ class Packet:
 
     def __init__(self, kind, srcAddr, dstAddr, content=None):
         """create a new packet"""
-        self.kind = kind        # either DATA or CONTROL
+        self.kind = kind  # either DATA or CONTROL
         self.srcAddr = srcAddr  # address of the source of the packet
         self.dstAddr = dstAddr  # address of the destination of the packet
         self.content = content  # content of the packet (must be a string)
         self.route = [srcAddr]  # DO NOT access from STPswitch
-
 
     def copy(self):
         """Create a deepcopy of the packet.  This gets called automatically
@@ -29,22 +29,18 @@ class Packet:
         p.route = list(self.route)
         return p
 
-
     def isData(self):
         """Returns True if the packet is a DATA packet"""
         return self.kind == Packet.DATA
-
 
     def isControl(self):
         """Returns True if the packet is a CONTROL packet"""
         return self.kind == Packet.CONTROL
 
-
     def addToRoute(self, addr):
-        '''DO NOT CALL from STPswitch'''
+        """DO NOT CALL from STPswitch"""
         self.route.append(addr)
 
-
     def getRoute(self):
-        '''DO NOT CALL from STPswitch'''
+        """DO NOT CALL from STPswitch"""
         return self.route
