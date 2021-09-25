@@ -17,7 +17,7 @@ class STPswitch(Switch):
         Switch.__init__(self, addr, heartbeatTime)  # initialize superclass - don't remove
         """TODO: add your own class fields and initialization code here"""
         self.forwardingTable = {}
-        self.controlPacketValues = [self.addr, 0, self.addr, self.addr]
+        self.controlPacketValues = [int(self.addr), 0, int(self.addr), int(self.addr)]  # [root, cost, self, hop]
 
     def handlePacket(self, port, packet):
         """TODO: process incoming packet"""
@@ -26,19 +26,55 @@ class STPswitch(Switch):
             if packet.dstAddr != "X":
                 pass
             else:
-                print("Broadcast packet recvd on port {} on switch {}".format(port, self.addr))
+                print("Broadcast packet recvd on port {} on switch {}".format(port, self.addr))  # DELETE THIS LATER
                 for p in self.links.keys():
-                    if p != port:
-                        print("Broadcast packet sent on port {}".format(p))
+                    if p != port and self.links[p].status == Link.ACTIVE:
+                        print("Broadcast packet sent on port {}".format(p))  # DELETE THIS LATER!!!
                         self.send(p, packet)
         elif packet.isControl():
             content = self.controlPacketContentToValue(packet.content)
-            if content[0] < self.controlPacketValues[0]:
-                self.controlPacketValues[0] = content[0]
-                self.controlPacketValues[1] = content[1] + 1
-                self.controlPacketValues[3] = content[2]
+            isUpdated = False
+            if content[2] == self.controlPacketValues[3]:  # Case 1: Advertisement from current next hop to root
+                isUpdated = True
+                if self.controlPacketValues[0] < content[0]:  # If X has smaller root than Y
+                    self.controlPacketValues = [int(self.addr), 0, int(self.addr), int(self.addr)]
+                else:
+                    self.controlPacketValues[0] = content[0]
+                    self.controlPacketValues[1] = content[1] + 1
+                    self.controlPacketValues[3] = content[2]
+            else:  # Case 2: Advertisement not from current next hop to root
+                if content[0] < self.controlPacketValues[0]:
+                    self.controlPacketValues[0] = content[0]
+                    self.controlPacketValues[1] = content[1] + 1
+                    self.controlPacketValues[3] = content[2]
+                    isUpdated = True
+                elif content[0] == self.controlPacketValues[0] and content[2] < self.controlPacketValues[2]:  # Same root, smaller cost
+                    self.controlPacketValues[1] = content[1] + 1
+                    self.controlPacketValues[3] = content[2]
+                    isUpdated = True
+                elif content[0] == self.controlPacketValues[0] and content[2] == (self.controlPacketValues[2] - 1):
+                    if content[2] < self.controlPacketValues[3]:
+                        self.controlPacketValues[1] = content[1] + 1
+                        self.controlPacketValues[3] = content[2]
+                        isUpdated = True
+            '''if isUpdated:
+                controlPacketContent = (self.controlPacketToString(self.controlPacketValues))
+                controlPacket = Packet(Packet.CONTROL, self.addr, 'X', controlPacketContent)
+                for port in self.links:
+                    if type(self.links[port].e2) != 'Client':
+                        self.send(port, controlPacket)
+            '''
+            # MAKE LINK INACTIVE
+            if self.controlPacketValues[3] != content[2] and content[3] != self.controlPacketValues[2]:
+                self.makeLinkInactive(content[2])
+        print("finished :)")
+        # self.send(port, packet)
 
-        self.send(port, packet)
+    def makeLinkInactive(self, endpoint2):
+        for port in self.links:
+            if self.links[port].get_e2(self.addr) == endpoint2:
+                self.links[port].status = Link.INACTIVE
+                break
 
     def handleNewLink(self, port, endpoint, cost):
         """TODO: handle new link"""
@@ -62,7 +98,7 @@ class STPswitch(Switch):
         '''
 
         controlPacketContent = (self.controlPacketToString(self.controlPacketValues))
-        controlPacket = Packet(2, self.addr, 'X', controlPacketContent)
+        controlPacket = Packet(Packet.CONTROL, self.addr, 'X', controlPacketContent)
         for port in self.links:
             if type(self.links[port].e2) != 'Client':
                 self.send(port, controlPacket)
@@ -71,7 +107,7 @@ class STPswitch(Switch):
 
     def controlPacketToString(self, controlPacket):
         s = ""
-        for i in self.controlPacketValues:
+        for i in controlPacket:
             s += str(i)
         return s
 
