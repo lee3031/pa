@@ -26,15 +26,14 @@ class STPswitch(Switch):
             if packet.dstAddr != "X":
                 pass
             else:
-                print("Broadcast packet recvd on port {} on switch {}".format(port, self.addr))  # DELETE THIS LATER
                 for p in self.links.keys():
                     if p != port and self.links[p].status == Link.ACTIVE:
-                        print("Broadcast packet sent on port {}".format(p))  # DELETE THIS LATER!!!
                         self.send(p, packet)
         elif packet.isControl():
             content = self.controlPacketContentToValue(packet.content)
             isUpdated = False
             if content[2] == self.controlPacketValues[3]:  # Case 1: Advertisement from current next hop to root
+                pass
                 isUpdated = True
                 if self.controlPacketValues[0] < content[0]:  # If X has smaller root than Y
                     self.controlPacketValues = [int(self.addr), 0, int(self.addr), int(self.addr)]
@@ -57,17 +56,16 @@ class STPswitch(Switch):
                         self.controlPacketValues[1] = content[1] + 1
                         self.controlPacketValues[3] = content[2]
                         isUpdated = True
-            '''if isUpdated:
+            if isUpdated:
                 controlPacketContent = (self.controlPacketToString(self.controlPacketValues))
                 controlPacket = Packet(Packet.CONTROL, self.addr, 'X', controlPacketContent)
                 for port in self.links:
-                    if type(self.links[port].e2) != 'Client':
+                    if type(self.links[port].get_e2(self.addr)) != 'Client':
                         self.send(port, controlPacket)
-            '''
+
             # MAKE LINK INACTIVE
             if self.controlPacketValues[3] != content[2] and content[3] != self.controlPacketValues[2]:
                 self.makeLinkInactive(content[2])
-        print("finished :)")
         # self.send(port, packet)
 
     def makeLinkInactive(self, endpoint2):
@@ -84,6 +82,7 @@ class STPswitch(Switch):
         """TODO: handle removed link"""
         pass
 
+
     def handlePeriodicOps(self, currTimeInMillisecs):
         """TODO: handle periodic operations. This method is called every heartbeatTime.
         You can change the value of heartbeatTime in the json file."""
@@ -96,11 +95,15 @@ class STPswitch(Switch):
                                 |___|
                             
         '''
+        print("hi its me, " + self.addr + ", and my links are " + str(self.links))
+        for i in range(10000000):
+            pass
+        print("hi its me again, " + self.addr + ", and my links are " + str(self.links))
 
         controlPacketContent = (self.controlPacketToString(self.controlPacketValues))
         controlPacket = Packet(Packet.CONTROL, self.addr, 'X', controlPacketContent)
         for port in self.links:
-            if type(self.links[port].e2) != 'Client':
+            if (self.links[port].get_e2(self.addr)).isnumeric():
                 self.send(port, controlPacket)
 
         pass

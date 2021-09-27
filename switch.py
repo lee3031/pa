@@ -73,7 +73,21 @@ class Switch():
     def send(self, port, packet):
         """Send a packet out given port"""
         try:
+            if packet.isControl():
+                self.f.write(
+                    "Sent CONTROL packet (" + packet.srcAddr + "->" + packet.dstAddr + " content=" + packet.content + ") on port " + str(
+                        port))
+            elif packet.isData():
+                self.f.write(
+                    "Sent DATA packet (" + packet.srcAddr + "->" + packet.dstAddr + " content=" + packet.content + ") on port " + str(
+                        port))
+            else:
+                self.f.write(
+                    "Sent UNKNOWN TYPE packet (" + packet.srcAddr + "->" + packet.dstAddr + " content=" + packet.content + ") on port " + str(
+                        port))
+            self.f.write("\n")
             self.links[port].send(packet, self.addr)
+
         except KeyError:
             pass
 
